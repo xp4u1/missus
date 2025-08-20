@@ -2,10 +2,12 @@ package main
 
 import (
 	_ "embed"
-	"fmt"
 	"io"
+	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -45,12 +47,25 @@ func uploadHandler(c echo.Context) error {
 		return c.String(http.StatusInternalServerError, p("Unable to write content"))
 	}
 
-	fmt.Printf("received file: %s\n", file.Filename)
+	log.Printf("received file: %s\n", file.Filename)
 
 	return c.String(http.StatusOK, p("Successfully uploaded "+file.Filename))
 }
 
-func main() {
+// GetOutboundIP Ping Cloudflare to get local IP address
+func GetOutboundIP() string {
+	conn, err := net.Dial("udp", "1.1.1.1:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP.String()
+}
+
+func StartServer(addr string) {
 	e := echo.New()
 
 	e.GET("/", func(c echo.Context) error {
@@ -64,9 +79,23 @@ func main() {
 		return c.HTML(http.StatusOK, htmxJS)
 	})
 
-	fmt.Println("Starting web interface on :9125") // todo: port flag
+	log.Println("starting web interface on " + GetOutboundIP() + addr)
 
 	e.HideBanner = true
 	e.HidePort = true
-	e.Logger.Fatal(e.Start(":9125"))
+	e.Logger.Fatal(e.Start(addr))
+}
+
+func main() {
+	port := 9125
+
+	if len(os.Args) > 1 {
+		if p, err := strconv.Atoi(os.Args[1]); err == nil {
+			port = p
+		} else {
+			log.Fatal("invalid port, using ", port)
+		}
+	}
+
+	StartServer(":" + strconv.Itoa(port))
 }
