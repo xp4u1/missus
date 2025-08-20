@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>missus</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/tailwind.min.js"></script>
+    <script src="/htmx.min.js"></script>
   </head>
   <body>
     <div
@@ -15,23 +16,20 @@
       >
         <div class="mx-auto max-w-md">
           <form
-            method="post"
-            action="/upload"
-            enctype="multipart/form-data"
+            class="mt-4"
+            hx-post="/upload"
+            hx-encoding="multipart/form-data"
+            hx-target="#uploadResult"
+            hx-swap="afterend"
+            hx-trigger="change from:input[type=file]"
             autocomplete="off"
           >
             <input type="file" name="file" />
           </form>
+
+          <div id="uploadResult" class="mt-4 text-md text-gray-600"></div>
         </div>
       </div>
     </div>
-
-    <script>
-      document
-        .querySelector("input[type='file']")
-        .addEventListener("change", (event) => {
-          event.target.parentElement.submit();
-        });
-    </script>
   </body>
 </html>
