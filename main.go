@@ -79,8 +79,6 @@ func StartServer(addr string) {
 		return c.HTML(http.StatusOK, htmxJS)
 	})
 
-	log.Println("starting web interface on " + GetOutboundIP() + addr)
-
 	e.HideBanner = true
 	e.HidePort = true
 	e.Logger.Fatal(e.Start(addr))
@@ -97,5 +95,13 @@ func main() {
 		}
 	}
 
-	StartServer(":" + strconv.Itoa(port))
+	ip := GetOutboundIP()
+	addr := ":" + strconv.Itoa(port)
+
+	log.Println("starting web interface on " + ip + addr)
+	if err := RenderQR("http://" + ip + addr); err != nil {
+		log.Fatal("unable to generate qr code")
+	}
+
+	StartServer(addr)
 }
