@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"flag"
 	"io"
 	"log"
 	"net"
@@ -85,22 +86,19 @@ func StartServer(addr string) {
 }
 
 func main() {
-	port := 9125
-
-	if len(os.Args) > 1 {
-		if p, err := strconv.Atoi(os.Args[1]); err == nil {
-			port = p
-		} else {
-			log.Fatal("invalid port, using ", port)
-		}
-	}
+	port := flag.Int("port", 9125, "Port number to listen on")
+	qr := flag.Bool("qr", true, "Generate a QR code to connect devices")
+	flag.Parse()
 
 	ip := GetOutboundIP()
-	addr := ":" + strconv.Itoa(port)
+	addr := ":" + strconv.Itoa(*port)
 
 	log.Println("starting web interface on " + ip + addr)
-	if err := RenderQR("http://" + ip + addr); err != nil {
-		log.Fatal("unable to generate qr code")
+	if *qr {
+		err := RenderQR("http://" + ip + addr)
+		if err != nil {
+			log.Fatal("unable to generate qr code")
+		}
 	}
 
 	StartServer(addr)
